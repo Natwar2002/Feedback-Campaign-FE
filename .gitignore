@@ -21,6 +21,7 @@ ehthumbs.db
 node_modules/
 .yarn/cache
 .yarn/unplugged
+.yarn/sdks
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.cjs
