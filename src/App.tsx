@@ -1,19 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { AppProvider } from '@/providers/app-provider';
 import { AppRoutes } from '@/routes/app-routes';
+import { useAuth } from '@clerk/clerk-react';
+import { setClerkTokenGetter } from '@/services/api-client';
 
-export const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<string>();
+const AppInner: React.FC = () => {
+  const { isLoaded, getToken } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    setIsAuthenticated(!!token);
-  }, []);
+    setClerkTokenGetter(getToken);
+  }, [getToken]);
 
+  if (!isLoaded) return <div>Loading...</div>;
+
+  return <AppRoutes />;
+};
+
+export const App: React.FC = () => {
   return (
     <AppProvider>
-          <AppRoutes isAuthenticated={isAuthenticated} userRole={userRole} />
+      <AppInner />
     </AppProvider>
   );
 };

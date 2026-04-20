@@ -1,6 +1,13 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, AxiosError } from 'axios';
 
-const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:3000/api';
+// const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+let clerkGetToken: (() => Promise<string | null>) | null = null;
+
+export const setClerkTokenGetter = (fn: () => Promise<string | null>) => {
+  clerkGetToken = fn;
+};
 
 /**
  * Custom API client class for making HTTP requests
@@ -19,10 +26,12 @@ class ApiClient {
     });
 
     // Request interceptor for adding auth tokens
-    this.client.interceptors.request.use((config) => {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+    this.client.interceptors.request.use(async (config) => {
+      if (clerkGetToken) {
+        const token = await clerkGetToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
       return config;
     });
@@ -33,7 +42,6 @@ class ApiClient {
       (error: AxiosError) => {
         // Handle 401 Unauthorized - redirect to login
         if (error.response?.status === 401) {
-          localStorage.removeItem('authToken');
           window.location.href = '/auth/login';
         }
 

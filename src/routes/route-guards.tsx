@@ -1,66 +1,43 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import { ROUTES } from './route-constants';
 
-export type UserRole = 'admin' | 'member' | 'guest';
-
-/**
- * Interface for authenticated user with role and permissions
- */
-export interface AuthenticatedUser {
-  id: string;
-  email: string;
-  role: UserRole;
-  permissions?: string[];
-}
-
-/**
- * Props for route protection components
- */
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  isAuthenticated: boolean;
-  requiredRoles?: UserRole[];
-  userRole?: UserRole;
-  fallbackTo?: string;
+}
+
+interface PublicRouteProps {
+  children: React.ReactNode;
 }
 
 /**
- * ProtectedRoute component for authentication guard
- * Redirects unauthenticated users to login
+ * ProtectedRoute — redirects to login if not signed in via Clerk
  */
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  children,
-  isAuthenticated,
-  requiredRoles,
-  userRole,
-  fallbackTo = ROUTES.AUTH.LOGIN,
-}) => {
-  // Check authentication
-  if (!isAuthenticated) {
-    return <Navigate to={fallbackTo} replace />;
-  }
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { isSignedIn, isLoaded } = useAuth();
 
-  // Check role-based access control (RBAC)
-  if (requiredRoles && userRole && !requiredRoles.includes(userRole)) {
-    return <Navigate to={ROUTES.ROOT} replace />;
+  if (!isLoaded) return <div>Loading...</div>;
+
+  if (!isSignedIn) {
+    return <Navigate to={ROUTES.AUTH.LOGIN} replace />;
   }
 
   return <>{children}</>;
 };
 
 /**
- * Hook to check if user has required permission
+ * PublicRoute — redirects to dashboard if already signed in
+ * Use this to wrap login/register so signed-in users can't revisit them
  */
-export const useHasPermission = (requiredPermission: string, userPermissions?: string[]): boolean => {
-  if (!userPermissions) return false;
-  return userPermissions.includes(requiredPermission);
-};
+export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
+  const { isSignedIn, isLoaded } = useAuth();
 
-/**
- * Hook to check if user has required role
- */
-export const useHasRole = (requiredRoles: UserRole[], userRole?: UserRole): boolean => {
-  if (!userRole) return false;
-  return requiredRoles.includes(userRole);
+  if (!isLoaded) return <div>Loading...</div>;
+
+  if (isSignedIn) {
+    return <Navigate to={ROUTES.ROOT} replace />;
+  }
+
+  return <>{children}</>;
 };

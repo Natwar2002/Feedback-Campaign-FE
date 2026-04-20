@@ -1,6 +1,7 @@
 import React from 'react';
 import { QueryProvider } from '@/providers/query-provider';
 import { RouterProvider } from '@/providers/router-provider';
+import { ClerkAuthProvider } from '@/providers/clerk-provider';
 
 interface AppProviderProps {
   children: React.ReactNode;
@@ -8,10 +9,12 @@ interface AppProviderProps {
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   return (
-    <QueryProvider>
-      <RouterProvider>
-        {children}
-      </RouterProvider>
-    </QueryProvider>
+    <ClerkAuthProvider>
+      <QueryProvider>
+        <RouterProvider>
+          {children}
+        </RouterProvider>
+      </QueryProvider>
+    </ClerkAuthProvider>
   );
 };
